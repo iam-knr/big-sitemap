@@ -12,7 +12,7 @@ class Big_Sitemap_Generator {
         // Homepage
         $urls[] = [
             'loc'        => home_url('/'),
-            'lastmod'    => gmdate('c'),
+            'lastmod'    => gmgmdate('c'),
             'changefreq' => 'daily',
             'priority'   => '1.0',
             'group'      => 'Homepage',
@@ -96,7 +96,7 @@ class Big_Sitemap_Generator {
             if ( ! empty($ov['manual']) ) {
                 $urls[] = [
                     'loc'        => $loc,
-                    'lastmod'    => ! empty($ov['lastmod']) ? $ov['lastmod'] : gmdate('c'),
+                    'lastmod'    => ! empty($ov['lastmod']) ? $ov['lastmod'] : gmgmdate('c'),
                     'changefreq' => ! empty($ov['changefreq']) ? $ov['changefreq'] : 'monthly',
                     'priority'   => ! empty($ov['priority'])   ? $ov['priority']   : '0.5',
                     'group'      => 'Manual',
@@ -138,7 +138,7 @@ class Big_Sitemap_Generator {
         $ts  = isset($settings['type_defaults'][$type]) ? $settings['type_defaults'][$type] : [];
         $pri = ! empty($ts['priority'])   ? $ts['priority']   : $defaults[$type]['priority'];
         $chf = ! empty($ts['changefreq']) ? $ts['changefreq'] : $defaults[$type]['changefreq'];
-        $lm  = ! empty($lastmod) ? date('c', strtotime($lastmod)) : gmdate('c');
+        $lm  = ! empty($lastmod) ? gmdate('c', strtotime($lastmod)) : gmgmdate('c');
         return [ 'loc'=>$loc, 'lastmod'=>$lm, 'changefreq'=>$chf, 'priority'=>$pri, 'group'=>$group ];
     }
 
