@@ -4,7 +4,7 @@
 **Author:** Kailas Nath R  
 **WordPress Compatibility:** 5.0 - 6.9  
 **PHP:** 7.0+  
-**License:** GPLv2 or later.  
+**License:** GPLv2 or later  
 
 ## Description
 
