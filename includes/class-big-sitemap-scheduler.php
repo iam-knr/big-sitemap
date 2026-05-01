@@ -20,7 +20,7 @@ class Big_Sitemap_Scheduler {
     public static function add_interval( $schedules ) {
         $schedules[self::INTERVAL] = [
             'interval' => 24 * HOUR_IN_SECONDS,
-            'display'  => __('Every 24 Hours', 'big-sitemap'),
+            'display'  => __('Every 24 Hours', 'big-sitemap-main'),
         ];
         return $schedules;
     }
