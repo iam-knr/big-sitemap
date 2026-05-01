@@ -1,14 +1,14 @@
 <?php
 /**
- * Plugin Name: Big Sitemap
- * Plugin URI: https://github.com/iam-knr/big-sitemap
+ * Plugin Name: Big SEO Sitemap
+ * Plugin URI: https://github.com/iam-knr/big-sitemap02
  * Description: Advanced XML sitemap generator with auto-updates every 24 hours, category-based grouping, manual override, search engine pinging, and full in-admin view & edit capabilities.
  * Version: 1.0.0
- * Author: Big Sitemap
- * Author URI: #
+ * Author: Kailas Nath R
+ * Author URI: https://www.linkedin.com/in/iamknr/
  * License: GPL-2.0+
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: big-sitemap
+ * Text Domain: big-seo-sitemap
  * Domain Path: /languages
  */
 

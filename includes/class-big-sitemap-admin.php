@@ -12,8 +12,8 @@ class Big_Sitemap_Admin {
 
     public static function menu() {
         add_menu_page(
-            'Big Sitemap',
-            'Big Sitemap',
+            'Big SEO Sitemap',
+            'Big SEO Sitemap',
             'manage_options',
             'big-sitemap',
             [__CLASS__, 'page'],
@@ -68,7 +68,7 @@ class Big_Sitemap_Admin {
         $tab = $_GET['tab'] ?? 'dashboard';
         ?>
         <div class="wrap big-sitemap-wrap">
-            <h1>Big Sitemap</h1>
+            <h1>Big SEO Sitemap</h1>
             
             <nav class="nav-tab-wrapper">
                 <a href="?page=big-sitemap&tab=dashboard" class="nav-tab <?= $tab==='dashboard'?'nav-tab-active':'' ?>">Dashboard</a>
