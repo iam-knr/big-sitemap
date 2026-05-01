@@ -51,7 +51,7 @@ class Big_Sitemap_Admin {
     public static function ajax_save_xml() {
         check_ajax_referer('big_sitemap_nonce', 'nonce');
         if (!current_user_can('manage_options')) wp_send_json_error('Permission denied');
-        $xml = wp_unslash(wp_kses_post($_POST['xml']??''));
+        $xml = wp_unslash($_POST['xml']??'');
         file_put_contents(ABSPATH.'sitemap.xml', $xml);
         wp_send_json_success(['message' => 'XML saved to sitemap.xml']);
     }
@@ -93,7 +93,7 @@ class Big_Sitemap_Admin {
                             <div class="stat-label">Last Pinged</div>
                         </div>
                         <div class="stat-box">
-                            <div class="stat-value"><?php echo $next_cron ? esc_html(date('Y-m-d H:i', $next_cron)) : 'Not scheduled' ?></div>
+                            <div class="stat-value"><?php echo $next_cron ? esc_html(gmdate('Y-m-d H:i', $next_cron)) : 'Not scheduled' ?></div>
                             <div class="stat-label">Next Auto Update</div>
                         </div>
                     </div>

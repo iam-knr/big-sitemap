@@ -8,8 +8,7 @@
  * Author URI: https://www.linkedin.com/in/iamknr/
  * License: GPL-2.0+
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: big-seo-sitemap
- * Domain Path: /languages
+ * Text Domain: big-sitemap-main
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
