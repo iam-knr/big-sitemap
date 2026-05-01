@@ -42,7 +42,7 @@ class Big_Sitemap_Admin {
     public static function ajax_save_overrides() {
         check_ajax_referer('big_sitemap_nonce', 'nonce');
         if (!current_user_can('manage_options')) wp_send_json_error('Permission denied');
-        $overrides = json_decode(stripslashes($_POST['overrides']??'[]'), true);
+        $overrides = json_decode(wp_unslash(sanitize_text_field($_POST['overrides']??'[]')), true);
         update_option('big_sitemap_url_overrides', $overrides, false);
         Big_Sitemap_Generator::generate();
         wp_send_json_success(['message' => 'Saved and regenerated']);
@@ -51,7 +51,7 @@ class Big_Sitemap_Admin {
     public static function ajax_save_xml() {
         check_ajax_referer('big_sitemap_nonce', 'nonce');
         if (!current_user_can('manage_options')) wp_send_json_error('Permission denied');
-        $xml = stripslashes($_POST['xml']??'');
+        $xml = wp_unslash(wp_kses_post($_POST['xml']??''));
         file_put_contents(ABSPATH.'sitemap.xml', $xml);
         wp_send_json_success(['message' => 'XML saved to sitemap.xml']);
     }
@@ -65,42 +65,42 @@ class Big_Sitemap_Admin {
         $next_cron = wp_next_scheduled('big_sitemap_cron_event');
         $sitemap_url = home_url('/sitemap.xml');
         
-        $tab = $_GET['tab'] ?? 'dashboard';
+        $tab = isset($_GET['tab']) ? sanitize_text_field(wp_unslash($_GET['tab'])) : 'dashboard';
         ?>
         <div class="wrap big-sitemap-wrap">
             <h1>Big SEO Sitemap</h1>
             
             <nav class="nav-tab-wrapper">
-                <a href="?page=big-sitemap&tab=dashboard" class="nav-tab <?= $tab==='dashboard'?'nav-tab-active':'' ?>">Dashboard</a>
-                <a href="?page=big-sitemap&tab=view" class="nav-tab <?= $tab==='view'?'nav-tab-active':'' ?>">View &amp; Edit</a>
-                <a href="?page=big-sitemap&tab=xml" class="nav-tab <?= $tab==='xml'?'nav-tab-active':'' ?>">Raw XML</a>
-                <a href="?page=big-sitemap&tab=settings" class="nav-tab <?= $tab==='settings'?'nav-tab-active':'' ?>">Settings</a>
+                <a href="?page=big-sitemap&tab=dashboard" class="nav-tab <?php echo $tab==='dashboard'?'nav-tab-active':'' ?>">Dashboard</a>
+                <a href="?page=big-sitemap&tab=view" class="nav-tab <?php echo $tab==='view'?'nav-tab-active':'' ?>">View &amp; Edit</a>
+                <a href="?page=big-sitemap&tab=xml" class="nav-tab <?php echo $tab==='xml'?'nav-tab-active':'' ?>">Raw XML</a>
+                <a href="?page=big-sitemap&tab=settings" class="nav-tab <?php echo $tab==='settings'?'nav-tab-active':'' ?>">Settings</a>
             </nav>
 
             <?php if ($tab === 'dashboard'): ?>
                 <div class="big-sitemap-section">
                     <div class="big-sitemap-stats">
                         <div class="stat-box">
-                            <div class="stat-value"><?= count($urls) ?></div>
+                            <div class="stat-value"><?php echo count($urls) ?></div>
                             <div class="stat-label">Total URLs</div>
                         </div>
                         <div class="stat-box">
-                            <div class="stat-value"><?= esc_html($last_updated) ?></div>
+                            <div class="stat-value"><?php echo esc_html($last_updated) ?></div>
                             <div class="stat-label">Last Updated</div>
                         </div>
                         <div class="stat-box">
-                            <div class="stat-value"><?= esc_html($last_pinged) ?></div>
+                            <div class="stat-value"><?php echo esc_html($last_pinged) ?></div>
                             <div class="stat-label">Last Pinged</div>
                         </div>
                         <div class="stat-box">
-                            <div class="stat-value"><?= $next_cron ? esc_html(date('Y-m-d H:i', $next_cron)) : 'Not scheduled' ?></div>
+                            <div class="stat-value"><?php echo $next_cron ? esc_html(date('Y-m-d H:i', $next_cron)) : 'Not scheduled' ?></div>
                             <div class="stat-label">Next Auto Update</div>
                         </div>
                     </div>
 
                     <div class="action-buttons">
                         <button id="big-sitemap-generate" class="button button-primary button-hero">Generate Sitemap Now</button>
-                        <a href="<?= esc_url($sitemap_url) ?>" target="_blank" class="button button-hero">View sitemap.xml</a>
+                        <a href="<?php echo esc_url($sitemap_url) ?>" target="_blank" class="button button-hero">View sitemap.xml</a>
                     </div>
 
                     <div id="big-sitemap-message" class="notice" style="display:none"></div>
@@ -139,24 +139,24 @@ class Big_Sitemap_Admin {
                         </thead>
                         <tbody>
                             <?php foreach ($urls as $idx => $u): ?>
-                            <tr data-loc="<?= esc_attr($u['loc']) ?>">
-                                <td><a href="<?= esc_url($u['loc']) ?>" target="_blank"><?= esc_html($u['loc']) ?></a></td>
-                                <td><?= esc_html($u['group']??'') ?></td>
+                            <tr data-loc="<?php echo esc_attr($u['loc']) ?>">
+                                <td><a href="<?php echo esc_url($u['loc']) ?>" target="_blank"><?php echo esc_html($u['loc']) ?></a></td>
+                                <td><?php echo esc_html($u['group']??'') ?></td>
                                 <td>
                                     <select class="priority-select" name="priority">
                                         <?php for ($p=0; $p<=10; $p++): $val = number_format($p/10, 1); ?>
-                                        <option value="<?= $val ?>" <?= selected($u['priority'], $val, false) ?>><?= $val ?></option>
+                                        <option value="<?php echo esc_html($val) ?>" <?php echo selected($u['priority'], $val, false) ?>><?php echo esc_html($val) ?></option>
                                         <?php endfor; ?>
                                     </select>
                                 </td>
                                 <td>
                                     <select class="changefreq-select" name="changefreq">
                                         <?php foreach (['always','hourly','daily','weekly','monthly','yearly','never'] as $f): ?>
-                                        <option value="<?= $f ?>" <?= selected($u['changefreq'], $f, false) ?>><?= ucfirst($f) ?></option>
+                                        <option value="<?php echo esc_html($f) ?>" <?php echo selected($u['changefreq'], $f, false) ?>><?php echo esc_html(ucfirst($f)) ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </td>
-                                <td><?= esc_html($u['lastmod']??'') ?></td>
+                                <td><?php echo esc_html($u['lastmod']??'') ?></td>
                                 <td><input type="checkbox" class="exclude-check" /></td>
                             </tr>
                             <?php endforeach; ?>
@@ -182,37 +182,37 @@ class Big_Sitemap_Admin {
                             <th>Content Types to Include</th>
                             <td>
                                 <?php foreach (['post','page','category','cpt','tag','author','product'] as $t): ?>
-                                <label><input type="checkbox" name="big_sitemap_settings[content_types][]" value="<?= $t ?>" <?= checked(in_array($t, $settings['content_types']??[]), true, false) ?> /> <?= ucfirst($t) ?></label><br/>
+                                <label><input type="checkbox" name="big_sitemap_settings[content_types][]" value="<?php echo esc_html($t) ?>" <?php echo checked(in_array($t, $settings['content_types']??[]), true, false) ?> /> <?php echo esc_html(ucfirst($t)) ?></label><br/>
                                 <?php endforeach; ?>
                             </td>
                         </tr>
                         <tr>
                             <th>Schedule Mode</th>
                             <td>
-                                <label><input type="radio" name="big_sitemap_settings[schedule_mode]" value="rolling" <?= checked($settings['schedule_mode'], 'rolling', false) ?> /> Rolling (24h from last run)</label><br/>
-                                <label><input type="radio" name="big_sitemap_settings[schedule_mode]" value="fixed" <?= checked($settings['schedule_mode'], 'fixed', false) ?> /> Fixed Time Daily</label>
+                                <label><input type="radio" name="big_sitemap_settings[schedule_mode]" value="rolling" <?php echo checked($settings['schedule_mode'], 'rolling', false) ?> /> Rolling (24h from last run)</label><br/>
+                                <label><input type="radio" name="big_sitemap_settings[schedule_mode]" value="fixed" <?php echo checked($settings['schedule_mode'], 'fixed', false) ?> /> Fixed Time Daily</label>
                             </td>
                         </tr>
                         <tr>
                             <th>Fixed Time (if selected)</th>
-                            <td><input type="time" name="big_sitemap_settings[schedule_time]" value="<?= esc_attr($settings['schedule_time']??'00:00') ?>" /></td>
+                            <td><input type="time" name="big_sitemap_settings[schedule_time]" value="<?php echo esc_attr($settings['schedule_time']??'00:00') ?>" /></td>
                         </tr>
                         <tr><th colspan="2"><h3>Default Priority &amp; Change Frequency per Type</h3></th></tr>
                         <?php foreach (['post','page','category','tag','author','cpt','product'] as $t): 
                             $td = $settings['type_defaults'][$t] ?? ['priority'=>'0.5','changefreq'=>'monthly'];
                         ?>
                         <tr>
-                            <th><?= ucfirst($t) ?></th>
+                            <th><?php echo esc_html(ucfirst($t)) ?></th>
                             <td>
-                                Priority: <select name="big_sitemap_settings[type_defaults][<?= $t ?>][priority]">
+                                Priority: <select name="big_sitemap_settings[type_defaults][<?php echo esc_html($t) ?>][priority]">
                                     <?php for ($p=0; $p<=10; $p++): $v = number_format($p/10, 1); ?>
-                                    <option value="<?= $v ?>" <?= selected($td['priority'], $v, false) ?>><?= $v ?></option>
+                                    <option value="<?php echo esc_html($v) ?>" <?php echo selected($td['priority'], $v, false) ?>><?php echo esc_html($v) ?></option>
                                     <?php endfor; ?>
                                 </select>
                                 &nbsp;&nbsp;
-                                Change Freq: <select name="big_sitemap_settings[type_defaults][<?= $t ?>][changefreq]">
+                                Change Freq: <select name="big_sitemap_settings[type_defaults][<?php echo esc_html($t) ?>][changefreq]">
                                     <?php foreach (['always','hourly','daily','weekly','monthly','yearly','never'] as $f): ?>
-                                    <option value="<?= $f ?>" <?= selected($td['changefreq'], $f, false) ?>><?= ucfirst($f) ?></option>
+                                    <option value="<?php echo esc_html($f) ?>" <?php echo selected($td['changefreq'], $f, false) ?>><?php echo esc_html(ucfirst($f)) ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </td>

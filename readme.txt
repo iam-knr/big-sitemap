@@ -1,8 +1,8 @@
 === Big SEO Sitemap ===
 Contributors: kailasnr
-Tags: sitemap, xml sitemap, seo, google, bing, search engine optimization
+Tags: sitemap, xml sitemap, seo, google, bing
 Requires at least: 5.0
-Tested up to: 6.5
+Tested up to: 6.9
 Stable tag: 1.0.0
 Requires PHP: 7.0
 License: GPLv2 or later
