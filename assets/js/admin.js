@@ -2,16 +2,16 @@ jQuery(function($) {
     $('#big-sitemap-generate').on('click', function() {
         const $btn = $(this);
         const orig = $btn.text();
-        $btn.text('⌛ Generating...').prop('disabled', true);
+        $btn.text('Generating...').prop('disabled', true);
         $.post(bigSitemapAjax.url, {
             action: 'big_sitemap_generate_now',
             nonce: bigSitemapAjax.nonce
         }, function(res) {
             if (res.success) {
-                $('#big-sitemap-message').removeClass('notice-error').addClass('notice-success').html('<p><strong>✅ ' + res.data.message + '</strong></p>').show();
+                $('#big-sitemap-message').removeClass('notice-error').addClass('notice-success').html('<p><strong>Success: ' + res.data.message + '</strong></p>').show();
                 setTimeout(() => location.reload(), 1500);
             } else {
-                $('#big-sitemap-message').removeClass('notice-success').addClass('notice-error').html('<p><strong>❌ Error: ' + res.data + '</strong></p>').show();
+                $('#big-sitemap-message').removeClass('notice-success').addClass('notice-error').html('<p><strong>Error: ' + res.data + '</strong></p>').show();
             }
             $btn.text(orig).prop('disabled', false);
         });
@@ -36,10 +36,10 @@ jQuery(function($) {
             overrides: JSON.stringify(overrides)
         }, function(res) {
             if (res.success) {
-                alert('✅ ' + res.data.message);
+                alert('Success: ' + res.data.message);
                 location.reload();
             } else {
-                alert('❌ Error: ' + res.data);
+                alert('Error: ' + res.data);
             }
             $btn.text(orig).prop('disabled', false);
         });
@@ -55,8 +55,8 @@ jQuery(function($) {
             nonce: bigSitemapAjax.nonce,
             xml: xml
         }, function(res) {
-            if (res.success) alert('✅ ' + res.data.message);
-            else alert('❌ Error: ' + res.data);
+            if (res.success) alert('Success: ' + res.data.message);
+            else alert('Error: ' + res.data);
             $btn.text(orig).prop('disabled', false);
         });
     });

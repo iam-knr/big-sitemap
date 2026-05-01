@@ -68,11 +68,11 @@ class Big_Sitemap_Admin {
         $tab = $_GET['tab'] ?? 'dashboard';
         ?>
         <div class="wrap big-sitemap-wrap">
-            <h1>ðºï¸ Big Sitemap</h1>
+            <h1>Big Sitemap</h1>
             
             <nav class="nav-tab-wrapper">
                 <a href="?page=big-sitemap&tab=dashboard" class="nav-tab <?= $tab==='dashboard'?'nav-tab-active':'' ?>">Dashboard</a>
-                <a href="?page=big-sitemap&tab=view" class="nav-tab <?= $tab==='view'?'nav-tab-active':'' ?>">View & Edit</a>
+                <a href="?page=big-sitemap&tab=view" class="nav-tab <?= $tab==='view'?'nav-tab-active':'' ?>">View &amp; Edit</a>
                 <a href="?page=big-sitemap&tab=xml" class="nav-tab <?= $tab==='xml'?'nav-tab-active':'' ?>">Raw XML</a>
                 <a href="?page=big-sitemap&tab=settings" class="nav-tab <?= $tab==='settings'?'nav-tab-active':'' ?>">Settings</a>
             </nav>
@@ -85,22 +85,22 @@ class Big_Sitemap_Admin {
                             <div class="stat-label">Total URLs</div>
                         </div>
                         <div class="stat-box">
-                            <div class="stat-value"><?= $last_updated ?></div>
+                            <div class="stat-value"><?= esc_html($last_updated) ?></div>
                             <div class="stat-label">Last Updated</div>
                         </div>
                         <div class="stat-box">
-                            <div class="stat-value"><?= $last_pinged ?></div>
+                            <div class="stat-value"><?= esc_html($last_pinged) ?></div>
                             <div class="stat-label">Last Pinged</div>
                         </div>
                         <div class="stat-box">
-                            <div class="stat-value"><?= $next_cron ? date('Y-m-d H:i', $next_cron) : 'Not scheduled' ?></div>
+                            <div class="stat-value"><?= $next_cron ? esc_html(date('Y-m-d H:i', $next_cron)) : 'Not scheduled' ?></div>
                             <div class="stat-label">Next Auto Update</div>
                         </div>
                     </div>
 
                     <div class="action-buttons">
-                        <button id="big-sitemap-generate" class="button button-primary button-hero">â¡ Generate Sitemap Now</button>
-                        <a href="<?= esc_url($sitemap_url) ?>" target="_blank" class="button button-hero">ð View sitemap.xml</a>
+                        <button id="big-sitemap-generate" class="button button-primary button-hero">Generate Sitemap Now</button>
+                        <a href="<?= esc_url($sitemap_url) ?>" target="_blank" class="button button-hero">View sitemap.xml</a>
                     </div>
 
                     <div id="big-sitemap-message" class="notice" style="display:none"></div>
@@ -116,7 +116,7 @@ class Big_Sitemap_Admin {
                                 $groups[$g] = ($groups[$g] ?? 0) + 1;
                             }
                             foreach ($groups as $g => $cnt) {
-                                echo "<tr><td>$g</td><td>$cnt</td></tr>";
+                                echo '<tr><td>'.esc_html($g).'</td><td>'.esc_html($cnt).'</td></tr>';
                             }
                             ?>
                         </tbody>
@@ -144,7 +144,7 @@ class Big_Sitemap_Admin {
                                 <td><?= esc_html($u['group']??'') ?></td>
                                 <td>
                                     <select class="priority-select" name="priority">
-                                        <?php for ($p=0; $p<=10; $p++): $val = ($p/10); ?>
+                                        <?php for ($p=0; $p<=10; $p++): $val = number_format($p/10, 1); ?>
                                         <option value="<?= $val ?>" <?= selected($u['priority'], $val, false) ?>><?= $val ?></option>
                                         <?php endfor; ?>
                                     </select>
@@ -162,7 +162,7 @@ class Big_Sitemap_Admin {
                             <?php endforeach; ?>
                         </tbody>
                     </table>
-                    <button id="save-url-overrides" class="button button-primary">Save Changes & Regenerate</button>
+                    <button id="save-url-overrides" class="button button-primary">Save Changes &amp; Regenerate</button>
                 </div>
 
             <?php elseif ($tab === 'xml'): ?>
@@ -197,7 +197,7 @@ class Big_Sitemap_Admin {
                             <th>Fixed Time (if selected)</th>
                             <td><input type="time" name="big_sitemap_settings[schedule_time]" value="<?= esc_attr($settings['schedule_time']??'00:00') ?>" /></td>
                         </tr>
-                        <tr><th colspan="2"><h3>Default Priority & Change Frequency per Type</h3></th></tr>
+                        <tr><th colspan="2"><h3>Default Priority &amp; Change Frequency per Type</h3></th></tr>
                         <?php foreach (['post','page','category','tag','author','cpt','product'] as $t): 
                             $td = $settings['type_defaults'][$t] ?? ['priority'=>'0.5','changefreq'=>'monthly'];
                         ?>
@@ -205,7 +205,7 @@ class Big_Sitemap_Admin {
                             <th><?= ucfirst($t) ?></th>
                             <td>
                                 Priority: <select name="big_sitemap_settings[type_defaults][<?= $t ?>][priority]">
-                                    <?php for ($p=0; $p<=10; $p++): $v = $p/10; ?>
+                                    <?php for ($p=0; $p<=10; $p++): $v = number_format($p/10, 1); ?>
                                     <option value="<?= $v ?>" <?= selected($td['priority'], $v, false) ?>><?= $v ?></option>
                                     <?php endfor; ?>
                                 </select>
@@ -219,7 +219,7 @@ class Big_Sitemap_Admin {
                         </tr>
                         <?php endforeach; ?>
                     </table>
-                    <?php submit_button('Save Settings & Reschedule Cron'); ?>
+                    <?php submit_button('Save Settings &amp; Reschedule Cron'); ?>
                 </form>
             <?php endif; ?>
         </div>
