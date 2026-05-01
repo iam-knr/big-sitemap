@@ -35,6 +35,11 @@ Big SEO Sitemap is the most powerful and flexible WordPress sitemap plugin desig
 * Multi-category blogs
 * Agencies managing client sites
 
+**Links:**
+
+* [Plugin Site & Documentation](https://github.com/iam-knr/big-seo-sitemap)
+* [Author: Kailas Nath R](https://www.linkedin.com/in/iamknr/)
+
 == Installation ==
 
 1. Upload the `big-sitemap` folder to `/wp-content/plugins/`
@@ -89,8 +94,3 @@ Absolutely! The plugin follows Google's sitemap best practices, includes proper 
 
 = 1.0.0 =
 Initial release of Big SEO Sitemap.
-
-== Author ==
-
-Developed by [Kailas Nath R](https://www.linkedin.com/in/iamknr/)
-Plugin Repository: [GitHub](https://github.com/iam-knr/big-sitemap02)

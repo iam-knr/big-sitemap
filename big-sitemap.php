@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Big SEO Sitemap
- * Plugin URI: https://github.com/iam-knr/big-sitemap02
+ * Plugin URI: https://github.com/iam-knr/big-seo-sitemap
  * Description: Advanced XML sitemap generator with auto-updates every 24 hours, category-based grouping, manual override, search engine pinging, and full in-admin view & edit capabilities.
  * Version: 1.0.0
  * Author: Kailas Nath R
