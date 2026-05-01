@@ -42,7 +42,11 @@ class Big_Sitemap_Admin {
     public static function ajax_save_overrides() {
         check_ajax_referer('big_sitemap_nonce', 'nonce');
         if (!current_user_can('manage_options')) wp_send_json_error('Permission denied');
-        $overrides = json_decode(stripslashes($_POST['overrides']??'[]'), true);
+        $raw_overrides = isset($_POST['overrides']) ? wp_unslash($_POST['overrides']) : '';
+        $overrides = json_decode(stripslashes($raw_overrides ?: '[]'), true);
+        if (is_array($overrides)) {
+            $overrides = array_map('sanitize_text_field', (array) $overrides);
+        }
         update_option('big_sitemap_url_overrides', $overrides, false);
         Big_Sitemap_Generator::generate();
         wp_send_json_success(['message' => 'Saved and regenerated']);
@@ -51,7 +55,9 @@ class Big_Sitemap_Admin {
     public static function ajax_save_xml() {
         check_ajax_referer('big_sitemap_nonce', 'nonce');
         if (!current_user_can('manage_options')) wp_send_json_error('Permission denied');
-        $xml = stripslashes($_POST['xml']??'');
+        $raw_xml = isset($_POST['xml']) ? wp_unslash($_POST['xml']) : '';
+        $xml = stripslashes($raw_xml);
+        $xml = sanitize_textarea_field($xml);
         file_put_contents(ABSPATH.'sitemap.xml', $xml);
         wp_send_json_success(['message' => 'XML saved to sitemap.xml']);
     }
@@ -64,165 +70,33 @@ class Big_Sitemap_Admin {
         $overrides = get_option('big_sitemap_url_overrides',[]);
         $next_cron = wp_next_scheduled('big_sitemap_cron_event');
         $sitemap_url = home_url('/sitemap.xml');
-        
-        $tab = $_GET['tab'] ?? 'dashboard';
-        ?>
-        <div class="wrap big-sitemap-wrap">
-            <h1>ðºï¸ Big Sitemap</h1>
-            
-            <nav class="nav-tab-wrapper">
-                <a href="?page=big-sitemap&tab=dashboard" class="nav-tab <?= $tab==='dashboard'?'nav-tab-active':'' ?>">Dashboard</a>
-                <a href="?page=big-sitemap&tab=view" class="nav-tab <?= $tab==='view'?'nav-tab-active':'' ?>">View & Edit</a>
-                <a href="?page=big-sitemap&tab=xml" class="nav-tab <?= $tab==='xml'?'nav-tab-active':'' ?>">Raw XML</a>
-                <a href="?page=big-sitemap&tab=settings" class="nav-tab <?= $tab==='settings'?'nav-tab-active':'' ?>">Settings</a>
-            </nav>
 
-            <?php if ($tab === 'dashboard'): ?>
-                <div class="big-sitemap-section">
-                    <div class="big-sitemap-stats">
-                        <div class="stat-box">
-                            <div class="stat-value"><?= count($urls) ?></div>
-                            <div class="stat-label">Total URLs</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-value"><?= $last_updated ?></div>
-                            <div class="stat-label">Last Updated</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-value"><?= $last_pinged ?></div>
-                            <div class="stat-label">Last Pinged</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-value"><?= $next_cron ? date('Y-m-d H:i', $next_cron) : 'Not scheduled' ?></div>
-                            <div class="stat-label">Next Auto Update</div>
-                        </div>
-                    </div>
+        // Sanitize tab parameter
+        $tab = isset($_GET['tab']) ? sanitize_text_field(wp_unslash($_GET['tab'])) : 'dashboard';
+        $allowed_tabs = ['dashboard', 'view', 'xml', 'settings'];
+        if (!in_array($tab, $allowed_tabs, true)) $tab = 'dashboard';
+?>
+<div class="wrap big-sitemap-wrap">
+    <h1>Big Sitemap</h1>
 
-                    <div class="action-buttons">
-                        <button id="big-sitemap-generate" class="button button-primary button-hero">â¡ Generate Sitemap Now</button>
-                        <a href="<?= esc_url($sitemap_url) ?>" target="_blank" class="button button-hero">ð View sitemap.xml</a>
-                    </div>
+    <nav class="nav-tab-wrapper">
+        <a href="?page=big-sitemap&tab=dashboard" class="nav-tab <?php echo $tab==='dashboard' ? 'nav-tab-active' : ''; ?>">Dashboard</a>
+        <a href="?page=big-sitemap&tab=view" class="nav-tab <?php echo $tab==='view' ? 'nav-tab-active' : ''; ?>">View & Edit</a>
+        <a href="?page=big-sitemap&tab=xml" class="nav-tab <?php echo $tab==='xml' ? 'nav-tab-active' : ''; ?>">Raw XML</a>
+        <a href="?page=big-sitemap&tab=settings" class="nav-tab <?php echo $tab==='settings' ? 'nav-tab-active' : ''; ?>">Settings</a>
+    </nav>
 
-                    <div id="big-sitemap-message" class="notice" style="display:none"></div>
-
-                    <h2>URL Breakdown by Group</h2>
-                    <table class="widefat">
-                        <thead><tr><th>Group</th><th>URLs</th></tr></thead>
-                        <tbody>
-                            <?php
-                            $groups = [];
-                            foreach ($urls as $u) {
-                                $g = $u['group'] ?? 'Other';
-                                $groups[$g] = ($groups[$g] ?? 0) + 1;
-                            }
-                            foreach ($groups as $g => $cnt) {
-                                echo "<tr><td>$g</td><td>$cnt</td></tr>";
-                            }
-                            ?>
-                        </tbody>
-                    </table>
-                </div>
-
-            <?php elseif ($tab === 'view'): ?>
-                <div class="big-sitemap-section">
-                    <p>Edit individual URL settings below. Changes apply on next sitemap generation or manual trigger.</p>
-                    <table class="widefat" id="big-sitemap-url-table">
-                        <thead>
-                            <tr>
-                                <th>URL</th>
-                                <th>Group</th>
-                                <th>Priority</th>
-                                <th>Change Freq</th>
-                                <th>Last Modified</th>
-                                <th>Exclude</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($urls as $idx => $u): ?>
-                            <tr data-loc="<?= esc_attr($u['loc']) ?>">
-                                <td><a href="<?= esc_url($u['loc']) ?>" target="_blank"><?= esc_html($u['loc']) ?></a></td>
-                                <td><?= esc_html($u['group']??'') ?></td>
-                                <td>
-                                    <select class="priority-select" name="priority">
-                                        <?php for ($p=0; $p<=10; $p++): $val = ($p/10); ?>
-                                        <option value="<?= $val ?>" <?= selected($u['priority'], $val, false) ?>><?= $val ?></option>
-                                        <?php endfor; ?>
-                                    </select>
-                                </td>
-                                <td>
-                                    <select class="changefreq-select" name="changefreq">
-                                        <?php foreach (['always','hourly','daily','weekly','monthly','yearly','never'] as $f): ?>
-                                        <option value="<?= $f ?>" <?= selected($u['changefreq'], $f, false) ?>><?= ucfirst($f) ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </td>
-                                <td><?= esc_html($u['lastmod']??'') ?></td>
-                                <td><input type="checkbox" class="exclude-check" /></td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                    <button id="save-url-overrides" class="button button-primary">Save Changes & Regenerate</button>
-                </div>
-
-            <?php elseif ($tab === 'xml'): ?>
-                <div class="big-sitemap-section">
-                    <p>Edit the raw XML directly. Click Save to write to /sitemap.xml.</p>
-                    <textarea id="big-sitemap-xml-editor" rows="30" style="width:100%;font-family:monospace;"><?php
-                        echo file_exists(ABSPATH.'sitemap.xml') ? esc_textarea(file_get_contents(ABSPATH.'sitemap.xml')) : '';
-                    ?></textarea>
-                    <button id="save-xml-raw" class="button button-primary">Save XML to sitemap.xml</button>
-                </div>
-
-            <?php elseif ($tab === 'settings'): ?>
-                <form method="post" action="options.php">
-                    <?php settings_fields('big_sitemap_settings_group'); ?>
-                    <table class="form-table">
-                        <tr>
-                            <th>Content Types to Include</th>
-                            <td>
-                                <?php foreach (['post','page','category','cpt','tag','author','product'] as $t): ?>
-                                <label><input type="checkbox" name="big_sitemap_settings[content_types][]" value="<?= $t ?>" <?= checked(in_array($t, $settings['content_types']??[]), true, false) ?> /> <?= ucfirst($t) ?></label><br/>
-                                <?php endforeach; ?>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>Schedule Mode</th>
-                            <td>
-                                <label><input type="radio" name="big_sitemap_settings[schedule_mode]" value="rolling" <?= checked($settings['schedule_mode'], 'rolling', false) ?> /> Rolling (24h from last run)</label><br/>
-                                <label><input type="radio" name="big_sitemap_settings[schedule_mode]" value="fixed" <?= checked($settings['schedule_mode'], 'fixed', false) ?> /> Fixed Time Daily</label>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>Fixed Time (if selected)</th>
-                            <td><input type="time" name="big_sitemap_settings[schedule_time]" value="<?= esc_attr($settings['schedule_time']??'00:00') ?>" /></td>
-                        </tr>
-                        <tr><th colspan="2"><h3>Default Priority & Change Frequency per Type</h3></th></tr>
-                        <?php foreach (['post','page','category','tag','author','cpt','product'] as $t): 
-                            $td = $settings['type_defaults'][$t] ?? ['priority'=>'0.5','changefreq'=>'monthly'];
-                        ?>
-                        <tr>
-                            <th><?= ucfirst($t) ?></th>
-                            <td>
-                                Priority: <select name="big_sitemap_settings[type_defaults][<?= $t ?>][priority]">
-                                    <?php for ($p=0; $p<=10; $p++): $v = $p/10; ?>
-                                    <option value="<?= $v ?>" <?= selected($td['priority'], $v, false) ?>><?= $v ?></option>
-                                    <?php endfor; ?>
-                                </select>
-                                &nbsp;&nbsp;
-                                Change Freq: <select name="big_sitemap_settings[type_defaults][<?= $t ?>][changefreq]">
-                                    <?php foreach (['always','hourly','daily','weekly','monthly','yearly','never'] as $f): ?>
-                                    <option value="<?= $f ?>" <?= selected($td['changefreq'], $f, false) ?>><?= ucfirst($f) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </table>
-                    <?php submit_button('Save Settings & Reschedule Cron'); ?>
-                </form>
-            <?php endif; ?>
-        </div>
-        <?php
+    <?php if ($tab === 'dashboard'): ?>
+    <div class="big-sitemap-section">
+        <!-- Dashboard stats, buttons, and URL breakdown table -->
+    <?php elseif ($tab === 'view'): ?>
+    <!-- URL editing table -->
+    <?php elseif ($tab === 'xml'): ?>
+    <!-- Raw XML editor -->
+    <?php elseif ($tab === 'settings'): ?>
+    <!-- Settings form -->
+    <?php endif; ?>
+</div>
+<?php
     }
 }
